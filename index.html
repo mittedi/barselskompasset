@@ -559,7 +559,7 @@ function getPerioder() {
     if (r === 'mor') {
         return [
             { navn: 'Graviditetsorlov FØR fødsel', desc: 'Barselsloven §6 — 4 uger FØR forventet fødsel. Løn afhænger af din arbejdsgivers politik.', uger: 4, max: 4, fast: true, type: 'loen' },
-            { navn: 'Barselsorlov EFTER fødsel', desc: 'Funktionærloven §7 — 14 uger barselsorlov med fuld løn (heraf 2 uger obligatorisk pligtorlov).', uger: 14, max: 14, fast: true, type: 'loen' },
+            { navn: 'Barselsorlov EFTER fødsel', desc: 'Funktionærloven §7 stk. 2 — 14 uger barselsorlov med halvløn (heraf 2 uger obligatorisk pligtorlov). Mange arbejdsgivere betaler fuld løn via overenskomst eller personalepolitik — tjek din ansættelseskontrakt.', uger: 14, max: 14, fast: true, type: 'loen' },
             { navn: 'Forældreorlov med løn', desc: 'Aftalebaseret — tjek din kontrakt eller personalepolitik. Mange arbejdsgivere tilbyder lønnede uger ud over de lovpligtige 14 uger.', uger: 0, max: 32, fast: false, type: 'loen' },
             { navn: 'Orlov uden løn (dagpenge)', desc: 'Barselsloven §9 — ret til forældreorloven i op til 32 uger. Din samlede dagpengeret er 28 uger som mor (inkl. de lønnede perioder). Da arbejdsgiver hæver dagpenge som refusion under lønnede uger, afhænger resterende dagpengeret af hvad der allerede er brugt. Kontakt Udbetaling Danmark for at afklare din konkrete situation.', uger: 0, max: 32, fast: false, type: 'uloen' },
             { navn: 'Tilbageværende ferie', desc: 'Angiv kun de uger du faktisk har tilbage på barselstidspunktet. Tjek din feriesaldo med din arbejdsgiver. Typisk max 6 uger (5 uger + eventuelle feriefridage).', uger: 0, max: 6, fast: false, type: 'ferie' },
