@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barselskompasset — Barselsberegner for funktionærer</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f0f4f8;
+            color: #222;
+            min-height: 100vh;
+        }
+
+        header {
+            background: #1a5276;
+            color: white;
+            padding: 1.5rem 2rem;
+        }
+        header h1 { font-size: 1.5rem; font-weight: 700; }
+        header p { font-size: 0.88rem; opacity: 0.75; margin-top: 0.3rem; }
+
+        .container {
+            max-width: 760px;
+            margin: 2rem auto;
+            padding: 0 1rem 3rem;
+        }
+
+        /* Progress */
+        .step-indicator {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 2rem;
+        }
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+        }
+        .step-circle {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: #c8d6e5;
+            color: #555;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+        .step.active .step-circle { background: #1a5276; color: white; }
+        .step.done .step-circle { background: #1a7f3c; color: white; font-size: 1rem; }
+        .step-label {
+            font-size: 0.72rem;
+            color: #777;
+            margin-top: 0.35rem;
+            text-align: center;
+        }
+        .step.active .step-label { color: #1a5276; font-weight: 600; }
+        .step.done .step-label { color: #1a7f3c; }
+        .step-line {
+            flex: 1;
+            height: 2px;
+            background: #c8d6e5;
+            margin-top: 17px;
+        }
+        .step.done + .step-line { background: #1a7f3c; }
+
+        /* Card */
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 2px 16px rgba(0,40,85,0.09);
+        }
+        .card h2 { font-size: 1.25rem; color: #1a5276; margin-bottom: 0.4rem; }
+        .subtitle { color: #666; font-size: 0.88rem; margin-bottom: 1.75rem; }
+
+        /* Option buttons */
+        .option-group { margin-bottom: 1.5rem; }
+        .group-label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.6rem;
+            font-size: 0.95rem;
+        }
+        .options { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+        .option-btn {
+            flex: 1;
+            min-width: 130px;
+            padding: 0.7rem 1rem;
+            border: 2px solid #c8d6e5;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: #333;
+            text-align: center;
+            transition: all 0.15s;
+        }
+        .option-btn:hover { border-color: #1a5276; background: #f0f4f8; }
+        .option-btn.selected { border-color: #1a5276; background: #1a5276; color: white; }
+
+        /* Text input fields */
+        .text-field-group { margin-bottom: 1.25rem; }
+        .text-field-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.4rem;
+            font-size: 0.95rem;
+        }
+        .text-field-group input[type="text"] {
+            width: 100%;
+            padding: 0.65rem 0.9rem;
+            border: 2px solid #c8d6e5;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-family: inherit;
+        }
+        .text-field-group input[type="text"]:focus { outline: none; border-color: #1a5276; }
+
+        /* Fields */
+        .field-group { margin-bottom: 1.25rem; }
+        .field-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.4rem;
+            font-size: 0.9rem;
+        }
+        .field-group input[type="date"] {
+            width: 100%;
+            padding: 0.65rem 0.9rem;
+            border: 2px solid #c8d6e5;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-family: inherit;
+        }
+        .field-group input:focus { outline: none; border-color: #1a5276; }
+        .field-note { font-size: 0.8rem; color: #888; margin-top: 0.35rem; }
+
+        /* Period rows */
+        .period-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.9rem 1rem;
+            border: 1px solid #dce7f3;
+            border-radius: 8px;
+            margin-bottom: 0.65rem;
+            background: #fafcff;
+            gap: 1rem;
+        }
+        .period-row .p-info { flex: 1; }
+        .period-row .p-name { font-weight: 600; font-size: 0.9rem; color: #1a5276; }
+        .period-row .p-desc { font-size: 0.78rem; color: #666; margin-top: 0.15rem; }
+        .week-control { display: flex; align-items: center; gap: 0.4rem; white-space: nowrap; }
+        .week-control input[type="number"] {
+            width: 65px;
+            padding: 0.4rem 0.5rem;
+            border: 2px solid #c8d6e5;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            text-align: center;
+            font-family: inherit;
+        }
+        .week-control input:focus { outline: none; border-color: #1a5276; }
+        .week-control .w-label { font-size: 0.82rem; color: #555; }
+
+        /* Result table */
+        .result-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.88rem;
+            margin-top: 1rem;
+        }
+        .result-table th {
+            background: #1a5276;
+            color: white;
+            padding: 0.65rem 0.9rem;
+            text-align: left;
+            font-size: 0.83rem;
+            font-weight: 600;
+        }
+        .result-table td {
+            padding: 0.65rem 0.9rem;
+            border-bottom: 1px solid #dce7f3;
+        }
+        .result-table tbody tr:last-child td {
+            border-bottom: none;
+            font-weight: 700;
+            background: #f0f4f8;
+        }
+        .badge {
+            display: inline-block;
+            font-size: 0.72rem;
+            padding: 2px 7px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+        .badge-loen { background: #d1eaff; color: #004080; }
+        .badge-uloen { background: #fef3cd; color: #7a5000; }
+        .badge-ferie { background: #d4edda; color: #155724; }
+
+        /* Alerts */
+        .alert {
+            padding: 0.85rem 1rem;
+            border-radius: 8px;
+            font-size: 0.86rem;
+            margin-top: 1rem;
+            line-height: 1.5;
+        }
+        .alert-info { background: #e8f2fd; border-left: 4px solid #1a5276; color: #0d2e45; }
+        .alert-warning { background: #fff8e1; border-left: 4px solid #f59e0b; color: #7a4f00; }
+
+        /* Buttons */
+        .btn-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 2rem;
+            gap: 1rem;
+        }
+        .btn {
+            padding: 0.7rem 1.75rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            font-family: inherit;
+            transition: all 0.15s;
+        }
+        .btn-primary { background: #1a5276; color: white; }
+        .btn-primary:hover { background: #154360; }
+        .btn-secondary { background: white; color: #1a5276; border: 2px solid #1a5276; }
+        .btn-secondary:hover { background: #f0f4f8; }
+        .btn-success { background: #1a7f3c; color: white; }
+        .btn-success:hover { background: #155f2d; }
+
+        .hidden { display: none; }
+
+        /* Support boks */
+        .support-box {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 2px 16px rgba(0,40,85,0.09);
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+        .support-box h3 {
+            font-size: 1rem;
+            color: #1a5276;
+            margin-bottom: 0.3rem;
+        }
+        .support-box p {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 1.1rem;
+        }
+        .support-btns {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .support-btns a {
+            display: inline-block;
+            padding: 0.65rem 1.4rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.88rem;
+            font-weight: 600;
+            transition: opacity 0.15s;
+        }
+        .support-btns a:hover { opacity: 0.85; }
+        .btn-kofi { background: #FF5E5B; color: white; }
+        .btn-mobilepay { background: #5a2d8c; color: white; }
+
+        footer {
+            text-align: center;
+            padding: 1.5rem;
+            color: #999;
+            font-size: 0.78rem;
+            line-height: 1.6;
+        }
+
+        /* Legend */
+        .legend {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-top: 0.75rem;
+            font-size: 0.8rem;
+        }
+
+        /* Print */
+        @media print {
+            body { background: white; }
+            .progress-wrap, .btn-row, footer, .kofi-wrap { display: none !important; }
+            .card { box-shadow: none; border: 1px solid #ddd; }
+            header {
+                background: #1a5276 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .result-table th {
+                background: #1a5276 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>Barselskompasset</h1>
+    <p>Beregn din barselsorlov og forældreorlov — for funktionærer</p>
+</header>
+
+<div class="container">
+
+    <!-- Velkomst -->
+    <div class="alert alert-info" style="margin-bottom:1.5rem;line-height:1.6;">
+        <strong style="font-size:1rem;">Velkommen til Barselskompasset</strong><br>
+        Dette gratis værktøj hjælper dig med at planlægge din barselsorlov baseret på Funktionærloven og Barselsloven.<br><br>
+        <strong>Saadan bruger du beregneren:</strong>
+        <ul style="margin:0.4rem 0 0.6rem 1.2rem;">
+            <li>Udfyld dine oplysninger i 4 enkle trin</li>
+            <li>Tilpas antallet af uger efter dit ønske og din arbejdsgivers politik</li>
+            <li>Print eller gem din plan som PDF</li>
+        </ul>
+        Beregningerne er vejledende. Kontakt din arbejdsgiver eller HR ved spørgsmål.
+    </div>
+
+    <!-- Progress -->
+    <div class="progress-wrap">
+        <div class="step-indicator" id="progressBar">
+            <div class="step active" id="si-1">
+                <div class="step-circle">1</div>
+                <div class="step-label">Hvem er du?</div>
+            </div>
+            <div class="step-line" id="sl-1"></div>
+            <div class="step" id="si-2">
+                <div class="step-circle">2</div>
+                <div class="step-label">Datoer</div>
+            </div>
+            <div class="step-line" id="sl-2"></div>
+            <div class="step" id="si-3">
+                <div class="step-circle">3</div>
+                <div class="step-label">Tilpas orlov</div>
+            </div>
+            <div class="step-line" id="sl-3"></div>
+            <div class="step" id="si-4">
+                <div class="step-circle">4</div>
+                <div class="step-label">Din plan</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- STEP 1 -->
+    <div class="card" id="step1">
+        <h2>Hvem er du?</h2>
+        <p class="subtitle">Udfyld dine oplysninger og vælg din rolle i forbindelse med fødslen.</p>
+
+        <div class="text-field-group">
+            <label>Navn:</label>
+            <input type="text" id="inp-navn" placeholder="Dit fulde navn" />
+        </div>
+        <div class="text-field-group">
+            <label>Virksomhed / Afdeling: <span style="font-weight:400;color:#888;">(valgfri)</span></label>
+            <input type="text" id="inp-klinik" placeholder="Navn på virksomhed eller afdeling" />
+        </div>
+
+        <div class="option-group">
+            <span class="group-label">Min rolle i forbindelse med fødslen:</span>
+            <div class="options">
+                <button class="option-btn" onclick="pick('rolle','mor',this)">Mor</button>
+                <button class="option-btn" onclick="pick('rolle','far',this)">Far</button>
+                <button class="option-btn" onclick="pick('rolle','medforaeldre',this)">Medforældre</button>
+            </div>
+        </div>
+
+        <div class="btn-row">
+            <div></div>
+            <button class="btn btn-primary" onclick="toStep(2)">Næste &rarr;</button>
+        </div>
+    </div>
+
+    <!-- STEP 2 -->
+    <div class="card hidden" id="step2">
+        <h2>Hvornår er/var fødslen?</h2>
+        <p class="subtitle" id="s2-sub"></p>
+        <div id="s2-content"></div>
+        <div class="btn-row">
+            <button class="btn btn-secondary" onclick="toStep(1)">&larr; Tilbage</button>
+            <button class="btn btn-primary" onclick="toStep(3)">Næste &rarr;</button>
+        </div>
+    </div>
+
+    <!-- STEP 3 -->
+    <div class="card hidden" id="step3">
+        <h2>Tilpas din orlov</h2>
+        <p class="subtitle">Angiv antal uger for hver periode. Faste perioder er lovpligtige og kan ikke ændres.</p>
+        <div id="s3-content"></div>
+        <div class="btn-row">
+            <button class="btn btn-secondary" onclick="toStep(2)">&larr; Tilbage</button>
+            <button class="btn btn-primary" onclick="beregn()">Beregn min plan &rarr;</button>
+        </div>
+    </div>
+
+    <!-- STEP 4 -->
+    <div class="card hidden" id="step4">
+        <h2>Din barselsplan</h2>
+        <p class="subtitle" id="s4-sub"></p>
+        <div id="s4-content"></div>
+        <div class="btn-row">
+            <button class="btn btn-secondary" onclick="toStep(1)">Start forfra</button>
+            <button class="btn btn-success" onclick="window.print()">&#128438; Print / Gem som PDF</button>
+        </div>
+    </div>
+
+    <!-- Support boks -->
+    <div class="support-box">
+        <h3>Synes du Barselskompasset er nyttigt?</h3>
+        <p>Værktøjet er gratis og reklamefrit. En kop kaffe holder projektet i live.</p>
+        <div class="support-btns">
+            <a href="https://ko-fi.com/mittedi" target="_blank" rel="noopener" class="btn-kofi">&#9749; Ko-fi</a>
+            <a href="https://qr.mobilepay.dk/box/24454bed-03c1-4951-83b8-e57857b8d887/pay-in" target="_blank" rel="noopener" class="btn-mobilepay">&#128148; MobilePay</a>
+        </div>
+    </div>
+
+</div>
+
+<footer>
+    Barselskompasset &middot; Gratis vejledende beregner for funktionærer<br>
+    &copy; 2026 Ditte Mi Petræus &middot; Udgivet under <a href="LICENSE" style="color:#aaa;">MIT-licens</a><br>
+    Beregningerne er vejledende og baseret på Barselsloven og Funktionærloven. Kontakt din arbejdsgiver eller HR ved tvivl.
+</footer>
+
+<script>
+const S = { navn: '', klinik: '', rolle: null, foedsel: null, termin: null, orlov2start: null };
+
+function pick(key, val, btn) {
+    S[key] = val;
+    btn.parentElement.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+}
+
+function fmt(d) {
+    if (!d) return '—';
+    return d.getDate().toString().padStart(2,'0') + '.' +
+           (d.getMonth()+1).toString().padStart(2,'0') + '.' +
+           d.getFullYear();
+}
+
+function addDays(d, n) { const r = new Date(d); r.setDate(r.getDate()+n); return r; }
+function addWeeks(d, w) { return addDays(d, w*7); }
+function subtractWeeks(d, w) { return addDays(d, -w*7); }
+function prevDay(d) { return addDays(d, -1); }
+function nextDay(d) { return addDays(d, 1); }
+
+function updateProgress(active) {
+    for (let i = 1; i <= 4; i++) {
+        const el = document.getElementById('si-'+i);
+        el.classList.remove('active','done');
+        const circle = el.querySelector('.step-circle');
+        if (i < active) {
+            el.classList.add('done');
+            circle.textContent = '✓';
+        } else {
+            circle.textContent = i;
+            if (i === active) el.classList.add('active');
+        }
+    }
+}
+
+function showOnly(n) {
+    [1,2,3,4].forEach(i => document.getElementById('step'+i).classList.add('hidden'));
+    document.getElementById('step'+n).classList.remove('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function toStep(n) {
+    if (n === 2) {
+        if (!S.rolle) { alert('Vælg venligst din rolle.'); return; }
+        S.navn = document.getElementById('inp-navn').value.trim();
+        if (!S.navn) { alert('Angiv venligst dit navn.'); return; }
+        S.klinik = document.getElementById('inp-klinik').value.trim();
+        buildStep2();
+    }
+    if (n === 3) {
+        if (!readDates()) return;
+        buildStep3();
+    }
+    updateProgress(n);
+    showOnly(n);
+}
+
+function readDates() {
+    const fi = document.getElementById('inp-foedsel');
+    const ti = document.getElementById('inp-termin');
+    const o2 = document.getElementById('inp-orlov2');
+
+    if (fi) S.foedsel = fi.value ? new Date(fi.value) : null;
+    if (ti) {
+        if (!ti.value) { alert('Angiv venligst forventet fødselsdato (termindato).'); return false; }
+        S.termin = new Date(ti.value);
+    }
+    if (o2) S.orlov2start = o2.value ? new Date(o2.value) : null;
+    return true;
+}
+
+function buildStep2() {
+    const sub = document.getElementById('s2-sub');
+    const content = document.getElementById('s2-content');
+    let html = '';
+
+    if (S.rolle === 'mor') {
+        sub.textContent = 'Termindato er obligatorisk. Faktisk fødselsdato kan udfyldes efter fødslen.';
+        html = `
+            <div class="field-group">
+                <label>Forventet fødselsdato (Terminsdato):</label>
+                <input type="date" id="inp-termin" value="${S.termin ? S.termin.toISOString().split('T')[0] : ''}" />
+                <p class="field-note">Bruges til at beregne graviditetsorlov 4 uger FØR fødsel. Obligatorisk.</p>
+            </div>
+            <div class="field-group">
+                <label>Faktisk fødselsdato: <span style="font-weight:400;color:#888;">(valgfri — udfyldes efter fødslen)</span></label>
+                <input type="date" id="inp-foedsel" value="${S.foedsel ? S.foedsel.toISOString().split('T')[0] : ''}" />
+                <p class="field-note">Udfyldes når barnet er født. Indtil da beregnes EFTER-perioden fra Terminsdato.</p>
+            </div>`;
+    } else {
+        sub.textContent = 'Angiv barnets fødselsdato og din planlagte orlovsstartdato.';
+        html = `
+            <div class="field-group">
+                <label>Hvornår var fødslen?</label>
+                <input type="date" id="inp-foedsel" value="${S.foedsel ? S.foedsel.toISOString().split('T')[0] : ''}" />
+                <p class="field-note">Bruges til at beregne de 2 uger ved fødsel.</p>
+            </div>
+            <div class="field-group">
+                <label>Forventet startdato for forældreorloven:</label>
+                <input type="date" id="inp-orlov2" value="${S.orlov2start ? S.orlov2start.toISOString().split('T')[0] : ''}" />
+                <p class="field-note">Forældreorloven behøver ikke tages umiddelbart efter fædreorlov. Lad feltet stå tomt hvis ikke planlagt endnu.</p>
+            </div>`;
+    }
+
+    content.innerHTML = html;
+}
+
+function getPerioder() {
+    const r = S.rolle;
+
+    if (r === 'mor') {
+        return [
+            { navn: 'Graviditetsorlov FØR fødsel', desc: 'Barselsloven §6 — 4 uger FØR forventet fødsel. Løn afhænger af din arbejdsgivers politik.', uger: 4, max: 4, fast: true, type: 'loen' },
+            { navn: 'Barselsorlov EFTER fødsel', desc: 'Funktionærloven §7 — 14 uger barselsorlov med fuld løn (heraf 2 uger obligatorisk pligtorlov).', uger: 14, max: 14, fast: true, type: 'loen' },
+            { navn: 'Forældreorlov med løn', desc: 'Aftalebaseret — tjek din kontrakt eller personalepolitik. Mange arbejdsgivere tilbyder lønnede uger ud over de lovpligtige 14 uger.', uger: 0, max: 32, fast: false, type: 'loen' },
+            { navn: 'Orlov uden løn (dagpenge)', desc: 'Barselsloven §9 — ret til forældreorloven i op til 32 uger. Din samlede dagpengeret er 28 uger som mor (inkl. de lønnede perioder). Da arbejdsgiver hæver dagpenge som refusion under lønnede uger, afhænger resterende dagpengeret af hvad der allerede er brugt. Kontakt Udbetaling Danmark for at afklare din konkrete situation.', uger: 0, max: 32, fast: false, type: 'uloen' },
+            { navn: 'Tilbageværende ferie', desc: 'Angiv kun de uger du faktisk har tilbage på barselstidspunktet. Tjek din feriesaldo med din arbejdsgiver. Typisk max 6 uger (5 uger + eventuelle feriefridage).', uger: 0, max: 6, fast: false, type: 'ferie' },
+        ];
+    } else {
+        return [
+            { navn: 'Fædreorlov VED fødsel', desc: 'Barselsloven §8 — 2 uger inden for de første 14 uger efter fødsel. Løn afhænger af din arbejdsgivers politik.', uger: 2, max: 2, fast: true, type: 'loen' },
+            { navn: 'Forældreorlov med løn', desc: 'Aftalebaseret — tjek din kontrakt eller personalepolitik. Mange arbejdsgivere tilbyder lønnede uger ud over de lovpligtige 2 uger.', uger: 0, max: 32, fast: false, type: 'loen' },
+            { navn: 'Orlov uden løn (dagpenge)', desc: 'Barselsloven §9 — ret til forældreorloven i op til 32 uger. Din samlede dagpengeret er 24 uger som far/medmor (inkl. de lønnede perioder). Da arbejdsgiver hæver dagpenge som refusion under lønnede uger, afhænger resterende dagpengeret af hvad der allerede er brugt. Kontakt Udbetaling Danmark for at afklare din konkrete situation.', uger: 0, max: 32, fast: false, type: 'uloen' },
+            { navn: 'Tilbageværende ferie', desc: 'Angiv kun de uger du faktisk har tilbage på barselstidspunktet. Tjek din feriesaldo med din arbejdsgiver. Typisk max 6 uger (5 uger + eventuelle feriefridage).', uger: 0, max: 6, fast: false, type: 'ferie' },
+        ];
+    }
+}
+
+function buildStep3() {
+    const perioder = getPerioder();
+    let html = '';
+
+    perioder.forEach((p, i) => {
+        html += `
+        <div class="period-row">
+            <div class="p-info">
+                <div class="p-name">${p.navn}</div>
+                <div class="p-desc">${p.desc}</div>
+            </div>
+            <div class="week-control">
+                ${p.fast
+                    ? `<strong style="font-size:1.05rem;color:#1a5276;">${p.uger}</strong>`
+                    : `<input type="number" id="w${i}" value="${p.uger}" min="${p.min||0}" max="${p.max}" />`
+                }
+                <span class="w-label">uger${!p.fast && p.max ? ' (max '+p.max+')' : ''}</span>
+            </div>
+        </div>`;
+    });
+
+    html += `<div class="alert alert-warning">
+        <strong>Tilbageværende ferie:</strong> Angiv kun den ferie du faktisk har tilbage på barselstidspunktet.
+        Har du allerede afholdt din sommerferie, taster du 0. Tjek din feriesaldo med din arbejdsgiver inden du udfylder feltet.
+    </div>`;
+
+    html += `<div class="alert alert-info">
+        <strong>Husk frister:</strong>
+        ${S.rolle === 'mor'
+            ? 'Anmeldelse af graviditetsorlov (FØR fødsel) skal ske til din arbejdsgiver <strong>senest 3 måneder</strong> før termindato. Anmeldelse af barselsorlov (EFTER fødsel) senest <strong>8 uger</strong> efter fødslen.'
+            : 'Anmeld din orlov til din arbejdsgiver <strong>senest 4 uger</strong> inden orlovens start.'
+        }
+        <br><em>Kilde: Barselsloven, LBK nr. 816 af 03/06/2021, §15 og §16 — retsinformation.dk</em>
+    </div>`;
+
+    document.getElementById('s3-content').innerHTML = html;
+}
+
+function beregn() {
+    const perioder = getPerioder();
+
+    perioder.forEach((p, i) => {
+        if (!p.fast) {
+            const inp = document.getElementById('w'+i);
+            if (inp) p.uger = Math.max(p.min||0, Math.min(p.max, parseInt(inp.value)||0));
+        }
+    });
+
+    const rows = [];
+    let cur;
+
+    if (S.rolle === 'mor') {
+        const foedselDato = S.foedsel || S.termin;
+
+        const startFoer = subtractWeeks(S.termin, 4);
+        const slutFoer  = prevDay(foedselDato);
+        rows.push({ navn: perioder[0].navn, uger: 4, start: startFoer, slut: slutFoer, type: 'loen' });
+
+        cur = nextDay(foedselDato);
+        for (let i = 1; i < perioder.length; i++) {
+            const p = perioder[i];
+            if (p.uger === 0) continue;
+            const start = new Date(cur);
+            const slut  = prevDay(addWeeks(start, p.uger));
+            rows.push({ navn: p.navn, uger: p.uger, start, slut, type: p.type });
+            cur = nextDay(slut);
+        }
+    } else {
+        const p0 = perioder[0];
+        const startVed = new Date(S.foedsel);
+        const slutVed  = prevDay(addWeeks(startVed, p0.uger));
+        rows.push({ navn: p0.navn, uger: p0.uger, start: startVed, slut: slutVed, type: 'loen' });
+
+        cur = S.orlov2start ? new Date(S.orlov2start) : nextDay(slutVed);
+
+        for (let i = 1; i < perioder.length; i++) {
+            const p = perioder[i];
+            if (p.uger === 0) continue;
+            const start = new Date(cur);
+            const slut  = prevDay(addWeeks(start, p.uger));
+            rows.push({ navn: p.navn, uger: p.uger, start, slut, type: p.type });
+            cur = nextDay(slut);
+        }
+    }
+
+    const genoptagelse = new Date(cur);
+    const rolleLabel = { mor: 'Mor', far: 'Far', medforaeldre: 'Medforældre' }[S.rolle];
+    const bgMap = { loen: '#e8f2fd', uloen: '#fff8e1', ferie: '#e8f8e8' };
+
+    let trs = rows.map(r => `
+        <tr style="background:${bgMap[r.type]||'white'}">
+            <td>${r.navn}</td>
+            <td style="text-align:center;">${r.uger}</td>
+            <td>${fmt(r.start)}</td>
+            <td>${fmt(r.slut)}</td>
+        </tr>`).join('');
+
+    trs += `
+        <tr>
+            <td><strong>Genoptagelse af arbejde</strong></td>
+            <td style="text-align:center;">—</td>
+            <td><strong>${fmt(genoptagelse)}</strong></td>
+            <td>—</td>
+        </tr>`;
+
+    const totalUger = rows.reduce((s, r) => s + r.uger, 0);
+    const navnDel = S.navn ? `${S.navn} · ` : '';
+    const klinikDel = S.klinik ? `${S.klinik} · ` : '';
+    const foedselInfo = S.foedsel ? `Fødselsdato: ${fmt(S.foedsel)}` : `Terminsdato: ${fmt(S.termin)} (foreløbig plan)`;
+    document.getElementById('s4-sub').textContent = `${navnDel}${klinikDel}${rolleLabel} · Funktionær · ${foedselInfo}`;
+
+    const farNote = S.rolle !== 'mor' ? `<div class="alert alert-info" style="margin-top:0.75rem;">
+        <strong>Fleksibel placering:</strong> Forældreorloven behøver ikke tages umiddelbart efter fædreorlov — den placeres fleksibelt efter aftale med din arbejdsgiver.
+        <br><em>Kilde: Barselsloven §9 og §10 — retsinformation.dk</em>
+    </div>` : '';
+
+    document.getElementById('s4-content').innerHTML = `
+        <table class="result-table">
+            <thead>
+                <tr>
+                    <th>Periode</th>
+                    <th style="text-align:center;">Uger</th>
+                    <th>Startdato</th>
+                    <th>Slutdato</th>
+                </tr>
+            </thead>
+            <tbody>${trs}</tbody>
+        </table>
+
+        <div class="legend">
+            <span class="badge badge-loen">Med løn</span>
+            <span class="badge badge-uloen">Uden løn (dagpenge)</span>
+            <span class="badge badge-ferie">Ferie</span>
+            <span style="font-size:0.8rem;color:#666;">· Total: <strong>${totalUger} uger</strong> orlov</span>
+        </div>
+
+        ${farNote}
+
+        <div class="alert alert-info" style="margin-top:0.75rem;">
+            <strong>Næste skridt:</strong>
+            ${S.rolle === 'mor'
+                ? 'Anmeld graviditetsorlov til din arbejdsgiver <strong>senest 3 måneder</strong> før termindato. Anmeld barselsorlov senest <strong>8 uger</strong> efter fødslen.'
+                : 'Anmeld din orlov til din arbejdsgiver <strong>senest 4 uger</strong> inden orlovens start.'
+            }
+        </div>
+
+        <div class="alert alert-warning" style="margin-top:0.75rem;">
+            <strong>OBS — lønnede perioder:</strong> Beregningen viser de lovpligtige perioder som faste. Yderligere lønnede uger (forældreorloven med løn) afhænger af din arbejdsgivers politik — tjek din ansættelseskontrakt eller personalehåndbog.
+        </div>
+
+        <p style="font-size:0.77rem;color:#999;margin-top:0.75rem;">
+            Beregningerne er vejledende og baseret på Barselsloven (LBK nr. 816 af 03/06/2021 med ændringer) og Funktionærloven.
+            Kontakt din arbejdsgiver eller HR ved tvivlsspørgsmål.
+        </p>`;
+
+    updateProgress(4);
+    showOnly(4);
+}
+</script>
+
+</body>
+</html>
