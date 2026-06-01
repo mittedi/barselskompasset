@@ -564,6 +564,7 @@ function getPerioder() {
             { navn: 'Forældreorloven — øremærket (9 uger)', desc: 'Barselsloven §9 — 9 uger KUN til dig. Kan ikke overdrages til den anden forælder. OBS: Bruges de ikke inden barnet fylder 1 år, bortfalder retten permanent. Dagpenge — løn afhænger af din arbejdsgivers politik.', uger: 9, max: 9, fast: true, type: 'uloen' },
             { navn: 'Forældreorloven — overdragelig', desc: 'Barselsloven §9 — 5 uger du kan overdrage til far/medforældre. Angiv 0 hvis du overdrager disse uger. Dagpenge.', uger: 5, max: 5, fast: false, type: 'uloen' },
             { navn: 'Ekstra lønnede uger (arbejdsgiver)', desc: 'Aftalebaseret — tjek din kontrakt eller personalepolitik. Mange arbejdsgivere tilbyder lønnede uger ud over de lovpligtige perioder.', uger: 0, max: 32, fast: false, type: 'loen' },
+            { navn: 'Orlov uden løn', desc: 'Valgfrit — barselsloven §9 giver ret til forældreorloven i op til 32 uger. Din samlede dagpengeret er 28 uger som mor. Da arbejdsgiver hæver dagpenge som refusion under lønnede uger, vil der typisk ikke være dagpengeret tilbage til denne periode. Evt. resterende orlov kan holdes ulønnet og uden dagpenge. Kontakt din arbejdsgiver eller Udbetaling Danmark for at afklare din konkrete situation.', uger: 0, max: 32, fast: false, type: 'uloen' },
             { navn: 'Tilbageværende ferie', desc: 'Angiv kun de uger du faktisk har tilbage på barselstidspunktet. Tjek din feriesaldo med din arbejdsgiver. Typisk max 6 uger (5 uger + eventuelle feriefridage).', uger: 0, max: 6, fast: false, type: 'ferie' },
         ];
     } else {
@@ -572,6 +573,7 @@ function getPerioder() {
             { navn: 'Forældreorloven — øremærket (9 uger)', desc: 'Barselsloven §9 — 9 uger KUN til dig. Kan ikke overdrages til den anden forælder. OBS: Bruges de ikke inden barnet fylder 1 år, bortfalder retten permanent. Dagpenge — løn afhænger af din arbejdsgivers politik.', uger: 9, max: 9, fast: true, type: 'uloen' },
             { navn: 'Forældreorloven — overdragelig', desc: 'Barselsloven §9 — 13 uger du kan overdrage til mor. Angiv 0 hvis du overdrager disse uger. Dagpenge.', uger: 13, max: 13, fast: false, type: 'uloen' },
             { navn: 'Ekstra lønnede uger (arbejdsgiver)', desc: 'Aftalebaseret — tjek din kontrakt eller personalepolitik. Mange arbejdsgivere tilbyder lønnede uger ud over de lovpligtige perioder.', uger: 0, max: 32, fast: false, type: 'loen' },
+            { navn: 'Orlov uden løn', desc: 'Valgfrit — barselsloven §9 giver ret til forældreorloven i op til 32 uger. Din samlede dagpengeret er 24 uger som far/medforældre. Da arbejdsgiver hæver dagpenge som refusion under lønnede uger, vil der typisk ikke være dagpengeret tilbage til denne periode. Evt. resterende orlov kan holdes ulønnet og uden dagpenge. Kontakt din arbejdsgiver eller Udbetaling Danmark for at afklare din konkrete situation.', uger: 0, max: 32, fast: false, type: 'uloen' },
             { navn: 'Tilbageværende ferie', desc: 'Angiv kun de uger du faktisk har tilbage på barselstidspunktet. Tjek din feriesaldo med din arbejdsgiver. Typisk max 6 uger (5 uger + eventuelle feriefridage).', uger: 0, max: 6, fast: false, type: 'ferie' },
         ];
     }
@@ -612,10 +614,10 @@ function buildStep3() {
     html += `<div class="alert alert-info">
         <strong>Husk frister:</strong>
         ${S.rolle === 'mor'
-            ? 'Anmeldelse af graviditetsorlov (FØR fødsel) til din arbejdsgiver <strong>senest 3 måneder</strong> før termindato. Anmeldelse af barselsorlov (EFTER fødsel) senest <strong>8 uger</strong> efter fødslen.'
-            : 'Anmeld orlov inden for de første 10 uger til din arbejdsgiver <strong>senest 4 uger før forventet fødsel</strong>. Anmeld forældreorloven (efter uge 10) <strong>senest 6 uger efter fødslen</strong>.'
+            ? 'Graviditetsorlov (FØR fødsel): Varsél arbejdsgiver <strong>senest 3 måneder</strong> FØR termindato (Barselsloven §15, stk. 1). Barselsorlov og forældreorloven (EFTER fødsel): Varsél om orlovens tilrettelæggelse <strong>senest 8 uger efter fødsel</strong> (Barselsloven §15, stk. 2).'
+            : 'Orlov inden for de første 10 uger (fædreorlov §8): Varsél arbejdsgiver <strong>senest 4 uger inden forventet fødsel</strong> (Barselsloven §15, stk. 2). Forældreorloven (§9): Varsél om tidspunkt og varighed <strong>senest 6 uger efter fødsel</strong> (Barselsloven §15, stk. 2).'
         }
-        <br><em>Kilde: Barselsloven, LBK nr 206 af 22/01/2026, §15 og §16 — <a href="https://www.retsinformation.dk/eli/lta/2026/206" target="_blank" rel="noopener">retsinformation.dk</a></em>
+        <br><em>Kilde: Barselsloven, LBK nr. 206 af 22/01/2026, §15 — <a href="https://www.retsinformation.dk/eli/lta/2026/206" target="_blank" rel="noopener">retsinformation.dk</a></em>
     </div>`;
 
     document.getElementById('s3-content').innerHTML = html;
@@ -728,8 +730,8 @@ function beregn() {
         <div class="alert alert-info" style="margin-top:0.75rem;">
             <strong>Næste skridt:</strong>
             ${S.rolle === 'mor'
-                ? 'Anmeld graviditetsorlov til din arbejdsgiver <strong>senest 3 måneder</strong> før termindato. Anmeld barselsorlov senest <strong>8 uger</strong> efter fødslen.'
-                : 'Anmeld orlov inden for de første 10 uger <strong>senest 4 uger før forventet fødsel</strong>. Anmeld forældreorloven (efter uge 10) <strong>senest 6 uger efter fødslen</strong>.'
+                ? 'Graviditetsorlov: Varsél arbejdsgiver <strong>senest 3 måneder</strong> FØR termindato (Barselsloven §15, stk. 1). Barselsorlov og forældreorloven: Varsél om tilrettelæggelse <strong>senest 8 uger efter fødsel</strong> (Barselsloven §15, stk. 2).'
+                : 'Fædreorlov (§8, inden 10 uger): Varsél <strong>senest 4 uger inden forventet fødsel</strong>. Forældreorloven (§9): Varsél <strong>senest 6 uger efter fødsel</strong> (Barselsloven §15, stk. 2).'
             }
         </div>
 
