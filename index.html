@@ -321,7 +321,7 @@
 
 <header>
     <h1>Barselskompasset</h1>
-    <p>Beregn din barselsorlov og forældreorlov — for funktionærer</p>
+    <p>Beregn din barselsorlov og forældreorlov — for lønmodtagere, selvstændige og enlige forsørgere</p>
 </header>
 
 <div class="container">
@@ -329,7 +329,7 @@
     <!-- Velkomst -->
     <div class="alert alert-info" style="margin-bottom:1.5rem;line-height:1.6;">
         <strong style="font-size:1rem;">Velkommen til Barselskompasset</strong><br>
-        Dette gratis værktøj hjælper dig med at planlægge din barselsorlov baseret på Funktionærloven og Barselsloven.<br><br>
+        Dette gratis værktøj hjælper dig med at planlægge din barselsorlov baseret på Barselsloven — for lønmodtagere, selvstændige og enlige forsørgere.<br><br>
         <strong>Saadan bruger du beregneren:</strong>
         <ul style="margin:0.4rem 0 0.6rem 1.2rem;">
             <li>Udfyld dine oplysninger i 4 enkle trin</li>
@@ -387,6 +387,22 @@
             </div>
         </div>
 
+        <div class="option-group">
+            <span class="group-label">Min ansættelsestype:</span>
+            <div class="options">
+                <button class="option-btn selected" onclick="pickAnsaettelse('loenmodtager',this)">Lønmodtager /<br>Funktionær</button>
+                <button class="option-btn" onclick="pickAnsaettelse('selvstaendig',this)">Selvstændig /<br>Freelance</button>
+            </div>
+        </div>
+
+        <div class="option-group">
+            <span class="group-label">Særlige forhold: <span style="font-weight:400;color:#888;">(valgfri)</span></span>
+            <div class="options" style="max-width:320px;">
+                <button class="option-btn" id="btn-enlig" onclick="toggleEnlig(this)">Enlig forsørger</button>
+            </div>
+            <p class="field-note" style="margin-top:0.4rem;">Vælg hvis du er den eneste forælder til barnet — giver ret til 22 ekstra ugers forældreorloven (Barselsloven §21c).</p>
+        </div>
+
         <div class="btn-row">
             <div></div>
             <button class="btn btn-primary" onclick="toStep(2)">Næste &rarr;</button>
@@ -439,19 +455,30 @@
 </div>
 
 <footer>
-    Barselskompasset &middot; Gratis vejledende beregner for funktionærer<br>
+    Barselskompasset &middot; Gratis vejledende beregner for lønmodtagere, selvstændige og enlige forsørgere<br>
     &copy; 2026 Ditte Mi Petræus &middot; Alle rettigheder forbeholdes<br>
     Beregningerne er vejledende og baseret på Barselsloven (LBK nr 206 af 22/01/2026) og Funktionærloven. Gælder børn født den 2. august 2022 eller senere.
     Kontakt din arbejdsgiver eller HR ved tvivl — eller læs mere på <a href="https://www.borger.dk/familie-og-boern/barsel-oversigt/barsel-loenmodtagere/barsel-loenmodtagere-ny-orlovsmodel" target="_blank" rel="noopener" style="color:#aaa;">borger.dk/barsel</a>.
 </footer>
 
 <script>
-const S = { navn: '', klinik: '', rolle: null, foedsel: null, termin: null, orlov2start: null };
+const S = { navn: '', klinik: '', rolle: null, foedsel: null, termin: null, orlov2start: null, selvstaendig: false, enlig: false };
 
 function pick(key, val, btn) {
     S[key] = val;
     btn.parentElement.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
     btn.classList.add('selected');
+}
+
+function pickAnsaettelse(val, btn) {
+    S.selvstaendig = (val === 'selvstaendig');
+    btn.parentElement.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+}
+
+function toggleEnlig(btn) {
+    S.enlig = !S.enlig;
+    btn.classList.toggle('selected', S.enlig);
 }
 
 function fmt(d) {
@@ -556,26 +583,71 @@ function buildStep2() {
 
 function getPerioder() {
     const r = S.rolle;
+    const enlig = S.enlig;
+    const selv = S.selvstaendig;
+
+    const betalingDesc = selv
+        ? ' Selvstændig: dagpenge udbetales direkte fra Udbetaling Danmark (max 3.332 kr./uge, §35 og §37).'
+        : ' Løn afhænger af din ansættelseskontrakt eller overenskomst.';
+
+    const ferieDesc = 'Angiv kun de uger du faktisk har tilbage på barselstidspunktet. Tjek din feriesaldo med din arbejdsgiver. Typisk max 6 uger (5 uger + eventuelle feriefridage).';
 
     if (r === 'mor') {
-        return [
-            { navn: 'Graviditetsorlov FØR fødsel', desc: 'Barselsloven §6 (LBK nr 206 af 22/01/2026) — 4 uger FØR forventet fødsel med ret til barselsdagpenge. Som funktionær modtager du typisk fuld løn via overenskomst eller personalepolitik — tjek din ansættelseskontrakt.', uger: 4, max: 4, fast: true, type: 'loen' },
-            { navn: 'Barselsorlov EFTER fødsel (10 uger)', desc: 'Barselsloven §7 — 10 uger umiddelbart efter fødsel, heraf 2 ugers obligatorisk pligtorlov. Løn afhænger af din ansættelseskontrakt eller overenskomst.', uger: 10, max: 10, fast: true, type: 'loen' },
-            { navn: 'Forældreorloven — øremærket (9 uger)', desc: 'Barselsloven §9 — 9 uger KUN til dig. Kan ikke overdrages til den anden forælder. OBS: Bruges de ikke inden barnet fylder 1 år, bortfalder retten permanent. Dagpenge — løn afhænger af din arbejdsgivers politik.', uger: 9, max: 9, fast: true, type: 'uloen' },
-            { navn: 'Forældreorloven — overdragelig', desc: 'Barselsloven §9 — 5 uger du kan overdrage til far/medforældre. Angiv 0 hvis du overdrager disse uger. Dagpenge.', uger: 5, max: 5, fast: false, type: 'uloen' },
-            { navn: 'Ekstra lønnede uger (arbejdsgiver)', desc: 'Aftalebaseret — tjek din kontrakt eller personalepolitik. Mange arbejdsgivere tilbyder lønnede uger ud over de lovpligtige perioder.', uger: 0, max: 32, fast: false, type: 'loen' },
-            { navn: 'Orlov uden løn', desc: 'Valgfrit — barselsloven §9 giver ret til forældreorloven i op til 32 uger. Din samlede dagpengeret er 28 uger som mor. Da arbejdsgiver hæver dagpenge som refusion under lønnede uger, vil der typisk ikke være dagpengeret tilbage til denne periode. Evt. resterende orlov kan holdes ulønnet og uden dagpenge. Kontakt din arbejdsgiver eller Udbetaling Danmark for at afklare din konkrete situation.', uger: 0, max: 32, fast: false, type: 'uloen' },
-            { navn: 'Tilbageværende ferie', desc: 'Angiv kun de uger du faktisk har tilbage på barselstidspunktet. Tjek din feriesaldo med din arbejdsgiver. Typisk max 6 uger (5 uger + eventuelle feriefridage).', uger: 0, max: 6, fast: false, type: 'ferie' },
+        const dagpengeret = enlig ? 50 : 28;
+        const uloenDesc = `Valgfrit — du kan holde yderligere orlov uden dagpenge. Din samlede dagpengeret er ${dagpengeret} uger som mor${enlig ? ' (inkl. 22 ekstra uger efter §21c)' : ''}.${selv ? '' : ' Da arbejdsgiver hæver dagpenge som refusion under lønnede uger, vil der typisk ikke være dagpengeret tilbage til denne periode.'} Kontakt ${selv ? 'Udbetaling Danmark' : 'din arbejdsgiver eller Udbetaling Danmark'} for at afklare din konkrete situation.`;
+
+        const overdrDesc = enlig
+            ? 'Barselsloven §9 — 5 uger. Som enlig forsørger er der ingen at overdrage disse til — de er dine at bruge. Kan evt. overdrages til en social forælder (nærtstående omsorgsperson) efter §23a. Dagpenge.'
+            : 'Barselsloven §9 — 5 uger du kan overdrage til far/medforældre. Angiv 0 hvis du overdrager disse uger. Dagpenge.';
+
+        const perioder = [
+            { navn: 'Graviditetsorlov FØR fødsel', desc: `Barselsloven §6 (LBK nr. 206 af 22/01/2026) — 4 uger FØR forventet fødsel med ret til barselsdagpenge.${selv ? ' Selvstændig: dagpenge direkte fra Udbetaling Danmark (max 3.332 kr./uge).' : ' Som funktionær modtager du typisk fuld løn via overenskomst eller personalepolitik — tjek din ansættelseskontrakt.'}`, uger: 4, max: 4, fast: true, type: 'loen' },
+            { navn: 'Barselsorlov EFTER fødsel (10 uger)', desc: `Barselsloven §7 — 10 uger umiddelbart efter fødsel, heraf 2 ugers obligatorisk pligtorlov.${betalingDesc}`, uger: 10, max: 10, fast: true, type: 'loen' },
+            { navn: 'Forældreorloven — øremærket (9 uger)', desc: 'Barselsloven §9, §21 stk. 3 — 9 uger KUN til dig. Kan ikke overdrages til den anden forælder. OBS: Bruges de ikke inden barnet fylder 1 år, bortfalder retten permanent. Dagpenge.', uger: 9, max: 9, fast: true, type: 'uloen' },
+            { navn: `Forældreorloven — ${enlig ? 'øvrige' : 'overdragelig'}`, desc: overdrDesc, uger: 5, max: 5, fast: false, type: 'uloen' },
         ];
+
+        if (enlig) {
+            perioder.push({ navn: 'Forældreorloven — enlig forsørger (22 ekstra uger)', desc: 'Barselsloven §21c stk. 1 — Som enlig forsørger har du ret til 22 ekstra ugers forældreorloven med dagpenge, fordi barnet kun har én forælder. Disse kan bruges fleksibelt og evt. overdrages til en social forælder (§23a). Dagpenge.', uger: 22, max: 22, fast: false, type: 'uloen' });
+        }
+
+        if (!selv) {
+            perioder.push({ navn: 'Ekstra lønnede uger (arbejdsgiver)', desc: 'Aftalebaseret — tjek din kontrakt eller personalepolitik. Mange arbejdsgivere tilbyder lønnede uger ud over de lovpligtige perioder.', uger: 0, max: 32, fast: false, type: 'loen' });
+        }
+
+        perioder.push(
+            { navn: 'Orlov uden løn', desc: uloenDesc, uger: 0, max: 32, fast: false, type: 'uloen' },
+            { navn: 'Tilbageværende ferie', desc: ferieDesc, uger: 0, max: 6, fast: false, type: 'ferie' }
+        );
+        return perioder;
+
     } else {
-        return [
-            { navn: 'Fædreorlov / medforældreorloven (2 uger)', desc: 'Barselsloven §8 (LBK nr 206 af 22/01/2026) — 2 uger inden for de første 10 uger efter fødsel. Løn afhænger af din arbejdsgivers politik.', uger: 2, max: 2, fast: true, type: 'loen' },
-            { navn: 'Forældreorloven — øremærket (9 uger)', desc: 'Barselsloven §9 — 9 uger KUN til dig. Kan ikke overdrages til den anden forælder. OBS: Bruges de ikke inden barnet fylder 1 år, bortfalder retten permanent. Dagpenge — løn afhænger af din arbejdsgivers politik.', uger: 9, max: 9, fast: true, type: 'uloen' },
-            { navn: 'Forældreorloven — overdragelig', desc: 'Barselsloven §9 — 13 uger du kan overdrage til mor. Angiv 0 hvis du overdrager disse uger. Dagpenge.', uger: 13, max: 13, fast: false, type: 'uloen' },
-            { navn: 'Ekstra lønnede uger (arbejdsgiver)', desc: 'Aftalebaseret — tjek din kontrakt eller personalepolitik. Mange arbejdsgivere tilbyder lønnede uger ud over de lovpligtige perioder.', uger: 0, max: 32, fast: false, type: 'loen' },
-            { navn: 'Orlov uden løn', desc: 'Valgfrit — barselsloven §9 giver ret til forældreorloven i op til 32 uger. Din samlede dagpengeret er 24 uger som far/medforældre. Da arbejdsgiver hæver dagpenge som refusion under lønnede uger, vil der typisk ikke være dagpengeret tilbage til denne periode. Evt. resterende orlov kan holdes ulønnet og uden dagpenge. Kontakt din arbejdsgiver eller Udbetaling Danmark for at afklare din konkrete situation.', uger: 0, max: 32, fast: false, type: 'uloen' },
-            { navn: 'Tilbageværende ferie', desc: 'Angiv kun de uger du faktisk har tilbage på barselstidspunktet. Tjek din feriesaldo med din arbejdsgiver. Typisk max 6 uger (5 uger + eventuelle feriefridage).', uger: 0, max: 6, fast: false, type: 'ferie' },
+        const dagpengeret = enlig ? 46 : 24;
+        const uloenDesc = `Valgfrit — du kan holde yderligere orlov uden dagpenge. Din samlede dagpengeret er ${dagpengeret} uger som far/medforældre${enlig ? ' (inkl. 22 ekstra uger efter §21c)' : ''}.${selv ? '' : ' Da arbejdsgiver hæver dagpenge som refusion under lønnede uger, vil der typisk ikke være dagpengeret tilbage til denne periode.'} Kontakt ${selv ? 'Udbetaling Danmark' : 'din arbejdsgiver eller Udbetaling Danmark'} for at afklare din konkrete situation.`;
+
+        const overdrDesc = enlig
+            ? 'Barselsloven §9 — 13 uger. Som enlig forsørger er der ingen at overdrage disse til — de er dine at bruge. Kan evt. overdrages til en social forælder (nærtstående omsorgsperson) efter §23a. Dagpenge.'
+            : 'Barselsloven §9 — 13 uger du kan overdrage til mor. Angiv 0 hvis du overdrager disse uger. Dagpenge.';
+
+        const perioder = [
+            { navn: 'Fædreorlov / medforældreorloven (2 uger)', desc: `Barselsloven §8 (LBK nr. 206 af 22/01/2026) — 2 uger inden for de første 10 uger efter fødsel.${betalingDesc}`, uger: 2, max: 2, fast: true, type: 'loen' },
+            { navn: 'Forældreorloven — øremærket (9 uger)', desc: 'Barselsloven §9, §21 stk. 3 — 9 uger KUN til dig. Kan ikke overdrages til den anden forælder. OBS: Bruges de ikke inden barnet fylder 1 år, bortfalder retten permanent. Dagpenge.', uger: 9, max: 9, fast: true, type: 'uloen' },
+            { navn: `Forældreorloven — ${enlig ? 'øvrige' : 'overdragelig'}`, desc: overdrDesc, uger: 13, max: 13, fast: false, type: 'uloen' },
         ];
+
+        if (enlig) {
+            perioder.push({ navn: 'Forældreorloven — enlig forsørger (22 ekstra uger)', desc: 'Barselsloven §21c stk. 1 — Som enlig forsørger har du ret til 22 ekstra ugers forældreorloven med dagpenge, fordi barnet kun har én forælder. Disse kan bruges fleksibelt og evt. overdrages til en social forælder (§23a). Dagpenge.', uger: 22, max: 22, fast: false, type: 'uloen' });
+        }
+
+        if (!selv) {
+            perioder.push({ navn: 'Ekstra lønnede uger (arbejdsgiver)', desc: 'Aftalebaseret — tjek din kontrakt eller personalepolitik. Mange arbejdsgivere tilbyder lønnede uger ud over de lovpligtige perioder.', uger: 0, max: 32, fast: false, type: 'loen' });
+        }
+
+        perioder.push(
+            { navn: 'Orlov uden løn', desc: uloenDesc, uger: 0, max: 32, fast: false, type: 'uloen' },
+            { navn: 'Tilbageværende ferie', desc: ferieDesc, uger: 0, max: 6, fast: false, type: 'ferie' }
+        );
+        return perioder;
     }
 }
 
@@ -602,9 +674,27 @@ function buildStep3() {
 
     html += `<div class="alert alert-warning">
         <strong>Øremærkede uger:</strong> De 9 øremærkede uger tilhører kun dig og kan ikke overdrages.
-        Bruges de ikke inden barnet fylder 1 år, <strong>bortfalder retten permanent</strong>.
-        Gælder lønmodtagere — kontakt Udbetaling Danmark ved tvivl.
+        Bruges de ikke inden barnet fylder 1 år, <strong>bortfalder retten permanent</strong> (Barselsloven §21 stk. 3).
+        Kontakt Udbetaling Danmark ved tvivl.
     </div>`;
+
+    if (S.selvstaendig) {
+        html += `<div class="alert alert-info">
+            <strong>Selvstændig / Freelance:</strong> Du modtager barselsdagpenge direkte fra Udbetaling Danmark — ingen arbejdsgiver supplerer til fuld løn.
+            Max-sats: <strong>3.332 kr. pr. uge</strong> (Barselsloven §35 stk. 1 og §37, LBK nr. 206 af 22/01/2026).<br>
+            <strong>Betingelse:</strong> Du skal have drevet virksomhed i mindst halvdelen af normal ugentlig arbejdstid i mindst <strong>6 måneder</strong> inden orloven starter (§28).<br>
+            Husk at anmelde barslen på <a href="https://www.borger.dk" target="_blank" rel="noopener">borger.dk</a>.
+        </div>`;
+    }
+
+    if (S.enlig) {
+        html += `<div class="alert alert-info">
+            <strong>Enlig forsørger (§21c):</strong> Du har ret til 22 ekstra ugers forældreorloven med dagpenge, fordi barnet kun har én forælder.
+            De øvrige/overdragelige uger er dine at bruge — eller de kan overdrages til en <em>social forælder</em> (nærtstående omsorgsperson) efter §23a.<br>
+            Din samlede dagpengeret: <strong>${S.rolle === 'mor' ? '50' : '46'} uger</strong>.
+            <br><em>Kilde: Barselsloven §21c stk. 1 og §23a, LBK nr. 206 af 22/01/2026.</em>
+        </div>`;
+    }
 
     html += `<div class="alert alert-warning">
         <strong>Tilbageværende ferie:</strong> Angiv kun den ferie du faktisk har tilbage på barselstidspunktet.
@@ -694,7 +784,9 @@ function beregn() {
     const navnDel = S.navn ? `${S.navn} · ` : '';
     const klinikDel = S.klinik ? `${S.klinik} · ` : '';
     const foedselInfo = S.foedsel ? `Fødselsdato: ${fmt(S.foedsel)}` : `Terminsdato: ${fmt(S.termin)} (foreløbig plan)`;
-    document.getElementById('s4-sub').textContent = `${navnDel}${klinikDel}${rolleLabel} · Funktionær · ${foedselInfo}`;
+    const ansaettelseLabel = S.selvstaendig ? 'Selvstændig' : 'Lønmodtager / Funktionær';
+    const enligLabel = S.enlig ? ' · Enlig forsørger' : '';
+    document.getElementById('s4-sub').textContent = `${navnDel}${klinikDel}${rolleLabel} · ${ansaettelseLabel}${enligLabel} · ${foedselInfo}`;
 
     const farNote = S.rolle !== 'mor' ? `<div class="alert alert-info" style="margin-top:0.75rem;">
         <strong>Fleksibel placering:</strong> Forældreorloven behøver ikke tages umiddelbart efter fædreorlov — den placeres fleksibelt efter aftale med din arbejdsgiver.
