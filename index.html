@@ -602,7 +602,7 @@ function getPerioder() {
 
         const perioder = [
             { navn: 'Graviditetsorlov FØR fødsel', desc: `Barselsloven §6 (LBK nr. 206 af 22/01/2026) — 4 uger FØR forventet fødsel med ret til barselsdagpenge.${selv ? ' Selvstændig: dagpenge direkte fra Udbetaling Danmark (max 3.332 kr./uge).' : ' Som funktionær modtager du typisk fuld løn via overenskomst eller personalepolitik — tjek din ansættelseskontrakt.'}`, uger: 4, max: 4, fast: true, type: 'loen' },
-            { navn: 'Barselsorlov EFTER fødsel (10 uger)', desc: `Barselsloven §7 — 10 uger umiddelbart efter fødsel, heraf 2 ugers obligatorisk pligtorlov.${betalingDesc}`, uger: 10, max: 10, fast: true, type: 'loen' },
+            { navn: 'Barselsorlov EFTER fødsel', desc: `Barselsloven §7 — Op til 10 uger umiddelbart efter fødsel. De 2 første uger er obligatorisk pligtorlov og kan ikke reduceres. Du kan overdrage op til 8 uger til far/medforældre via §7a — reducer ugetallet her og aftal det med far.${betalingDesc}`, uger: 10, min: 2, max: 10, fast: false, type: 'loen' },
             { navn: 'Forældreorloven — øremærket (9 uger)', desc: 'Barselsloven §9, §21 stk. 3 — 9 uger KUN til dig. Kan ikke overdrages til den anden forælder. OBS: Bruges de ikke inden barnet fylder 1 år, bortfalder retten permanent. Dagpenge.', uger: 9, max: 9, fast: true, type: 'uloen' },
             { navn: `Forældreorloven — ${enlig ? 'øvrige' : 'overdragelig'}`, desc: overdrDesc, uger: 5, max: 5, fast: false, type: 'uloen' },
         ];
@@ -631,6 +631,7 @@ function getPerioder() {
 
         const perioder = [
             { navn: 'Fædreorlov / medforældreorloven (2 uger)', desc: `Barselsloven §8 (LBK nr. 206 af 22/01/2026) — 2 uger inden for de første 10 uger efter fødsel.${betalingDesc}`, uger: 2, max: 2, fast: true, type: 'loen' },
+            { navn: 'Modtaget fra mor — §7a', desc: 'Barselsloven §7a — Mor kan overdrage op til 8 uger af sin §7-barselsorlov til dig. Angiv det aftalte antal uger (0 hvis I ikke har aftalt dette). Ugen kan holdes enten inden for de første 10 uger (§7a stk. 1) eller fleksibelt det første år (§7a stk. 2).', uger: 0, max: 8, fast: false, type: 'loen' },
             { navn: 'Forældreorloven — øremærket (9 uger)', desc: 'Barselsloven §9, §21 stk. 3 — 9 uger KUN til dig. Kan ikke overdrages til den anden forælder. OBS: Bruges de ikke inden barnet fylder 1 år, bortfalder retten permanent. Dagpenge.', uger: 9, max: 9, fast: true, type: 'uloen' },
             { navn: `Forældreorloven — ${enlig ? 'øvrige' : 'overdragelig'}`, desc: overdrDesc, uger: 13, max: 13, fast: false, type: 'uloen' },
         ];
@@ -671,6 +672,24 @@ function buildStep3() {
             </div>
         </div>`;
     });
+
+    if (S.rolle === 'mor') {
+        html += `<div class="alert alert-info">
+            <strong>Overdragelse til far via §7a:</strong> Du kan overdrage op til 8 uger af din §7-barselsorlov til far/medforældre.
+            Reducer "Barselsorlov EFTER fødsel" til det antal uger du beholder (minimum 2 ugers pligtorlov).
+            Far skal angive de modtagne uger under "Modtaget fra mor — §7a" i sin egen beregning.
+            <br><em>Kilde: Barselsloven §7a, LBK nr. 206 af 22/01/2026.</em>
+        </div>`;
+    }
+
+    if (S.rolle !== 'mor') {
+        html += `<div class="alert alert-info">
+            <strong>§7a — uger modtaget fra mor:</strong> Mor kan overdrage op til 8 uger af sin §7-barselsorlov til dig.
+            Aftal antallet med mor og angiv det i feltet "Modtaget fra mor — §7a" ovenfor.
+            Ugen kan holdes inden for de første 10 uger (§7a stk. 1) eller fleksibelt det første år (§7a stk. 2).
+            <br><em>Kilde: Barselsloven §7a, LBK nr. 206 af 22/01/2026.</em>
+        </div>`;
+    }
 
     html += `<div class="alert alert-warning">
         <strong>Øremærkede uger:</strong> De 9 øremærkede uger tilhører kun dig og kan ikke overdrages.
